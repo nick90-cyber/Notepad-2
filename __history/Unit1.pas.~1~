@@ -1,0 +1,138 @@
+unit Unit1;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
+  System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
+  Vcl.StdCtrls, Vcl.ComCtrls, Vcl.ExtCtrls, System.IOUtils;
+
+type
+  TForm1 = class(TForm)
+    ComboBoxCategoria: TComboBox;
+    EditTitulo: TEdit;
+    MemoDescricao: TMemo;
+    CheckBoxImportante: TCheckBox;
+    DateTimePicker1: TDateTimePicker;
+    TrackBarPrioridade: TTrackBar;
+    ProgressBar1: TProgressBar;
+    ListBoxNotas: TListBox;
+    ButtonSalvar: TButton;
+
+    procedure FormCreate(Sender: TObject);
+    procedure ButtonSalvarClick(Sender: TObject);
+    procedure ListBoxNotasClick(Sender: TObject);
+  private
+    procedure AtualizarProgresso(Valor: Integer);
+    procedure CarregarNotasSalvas;
+  public
+  end;
+
+var
+  Form1: TForm1;
+
+implementation
+
+{$R *.dfm}
+
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+  ComboBoxCategoria.Items.Add('Pessoal');
+  ComboBoxCategoria.Items.Add('Trabalho');
+  ComboBoxCategoria.Items.Add('Estudos');
+  ComboBoxCategoria.ItemIndex := 0;
+
+  TrackBarPrioridade.Min := 1;
+  TrackBarPrioridade.Max := 10;
+  TrackBarPrioridade.Position := 5;
+
+  ProgressBar1.Min := 0;
+  ProgressBar1.Max := 100;
+  ProgressBar1.Position := 0;
+
+  DateTimePicker1.DateTime := Now;
+
+  CarregarNotasSalvas;
+end;
+
+procedure TForm1.AtualizarProgresso(Valor: Integer);
+begin
+  ProgressBar1.Position := Valor;
+  Application.ProcessMessages;
+end;
+
+procedure TForm1.CarregarNotasSalvas;
+var
+  SR: TSearchRec;
+begin
+  ListBoxNotas.Items.Clear;
+
+  if not DirectoryExists('NotasSalvas') then
+    CreateDir('NotasSalvas');
+
+  if FindFirst('NotasSalvas\*.txt', faAnyFile, SR) = 0 then
+  begin
+    repeat
+      ListBoxNotas.Items.Add(ChangeFileExt(SR.Name, ''));
+    until FindNext(SR) <> 0;
+    FindClose(SR);
+  end;
+end;
+
+procedure TForm1.ButtonSalvarClick(Sender: TObject);
+var
+  Texto, NomeArquivo, NomeBase: string;
+begin
+  if Trim(EditTitulo.Text) = '' then
+  begin
+    ShowMessage('Digite um título antes de salvar.');
+    Exit;
+  end;
+
+  AtualizarProgresso(10);
+
+  NomeBase := EditTitulo.Text + '_' + FormatDateTime('yyyymmdd_hhnnss', Now);
+  NomeArquivo := 'NotasSalvas\' + NomeBase + '.txt';
+
+  Texto := 'Aplicativo: Meu App de Notas' + sLineBreak +
+           'Categoria: ' + ComboBoxCategoria.Text + sLineBreak +
+           'Título: ' + EditTitulo.Text + sLineBreak +
+           'Descrição: ' + MemoDescricao.Text + sLineBreak +
+           'Importante: ' + BoolToStr(CheckBoxImportante.Checked, True) + sLineBreak +
+           'Data/Hora: ' + FormatDateTime('dd/mm/yyyy hh:nn', DateTimePicker1.DateTime) + sLineBreak +
+           'Prioridade: ' + IntToStr(TrackBarPrioridade.Position) + sLineBreak;
+
+  AtualizarProgresso(60);
+  TFile.WriteAllText(NomeArquivo, Texto, TEncoding.UTF8);
+
+  ListBoxNotas.Items.Add(NomeBase);
+
+  AtualizarProgresso(100);
+  ShowMessage('Nota salva com sucesso!');
+  AtualizarProgresso(0);
+
+  EditTitulo.Clear;
+  MemoDescricao.Clear;
+  CheckBoxImportante.Checked := False;
+  TrackBarPrioridade.Position := 5;
+  DateTimePicker1.DateTime := Now;
+end;
+
+procedure TForm1.ListBoxNotasClick(Sender: TObject);
+var
+  NomeArquivo, Texto: string;
+begin
+  if ListBoxNotas.ItemIndex = -1 then Exit;
+
+  NomeArquivo := 'NotasSalvas\' + ListBoxNotas.Items[ListBoxNotas.ItemIndex] + '.txt';
+
+  if FileExists(NomeArquivo) then
+  begin
+    Texto := TFile.ReadAllText(NomeArquivo, TEncoding.UTF8);
+    ShowMessage(Texto);
+  end
+  else
+    ShowMessage('Arquivo não encontrado.');
+end;
+
+end.

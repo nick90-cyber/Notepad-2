@@ -1,0 +1,7 @@
+﻿Aplicativo: Meu App de Notas
+Categoria: Pessoal
+Título: dfdfd
+Descrição: dfdfdf
+Importante: True
+Data/Hora: 01/08/2025 19:48
+Prioridade: 7

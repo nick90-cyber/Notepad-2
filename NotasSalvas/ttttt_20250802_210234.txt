@@ -1,0 +1,7 @@
+﻿Aplicativo: Meu App de Notas
+Categoria: Trabalho
+Título: ttttt
+Descrição: tt
+Importante: True
+Data/Hora: 27/08/2025 21:02
+Prioridade: 5
